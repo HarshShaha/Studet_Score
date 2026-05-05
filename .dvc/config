@@ -1,0 +1,8 @@
+[core]
+    remote = myremote
+    autostage = true
+
+[remote "myremote"]
+    url = s3://your-bucket/student-score-dvc
+    # For local dev, switch to:
+    # url = /tmp/dvc-storage

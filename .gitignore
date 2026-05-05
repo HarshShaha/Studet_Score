@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.env
+.venv/
+venv/
+*.egg-info/
+
+# Data (tracked by DVC, not Git)
+data/raw/
+data/processed/
+
+# Models
+models/
+
+# MLflow
+mlruns/
+mlruns_test/
+
+# DVC cache
+.dvc/cache/
+.dvc/tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kaggle credentials
+kaggle.json
+.kaggle/

@@ -1,0 +1,54 @@
+stages:
+  ingest:
+    cmd: python src/pipeline/ingest.py
+    deps:
+      - src/pipeline/ingest.py
+      - params.yaml
+    params:
+      - data.raw_path
+      - data.random_state
+    outs:
+      - data/raw/student_performance.csv
+
+  preprocess:
+    cmd: python src/pipeline/preprocess.py
+    deps:
+      - src/pipeline/preprocess.py
+      - data/raw/student_performance.csv
+      - params.yaml
+    params:
+      - data.features
+      - data.target
+      - data.test_size
+      - data.random_state
+      - preprocessing.scale_features
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+      - data/processed/scaler.joblib
+
+  train:
+    cmd: python src/pipeline/train.py
+    deps:
+      - src/pipeline/train.py
+      - data/processed/train.csv
+      - data/processed/test.csv
+      - params.yaml
+    params:
+      - models
+      - mlflow
+    outs:
+      - models/best_model.joblib
+    metrics:
+      - models/metrics.json:
+          cache: false
+
+  evaluate:
+    cmd: python src/pipeline/evaluate.py
+    deps:
+      - src/pipeline/evaluate.py
+      - data/processed/test.csv
+      - models/best_model.joblib
+    metrics:
+      - models/metrics.json:
+          cache: false

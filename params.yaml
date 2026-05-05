@@ -1,0 +1,36 @@
+data:
+  raw_path: data/raw/student_performance.csv
+  processed_dir: data/processed
+  test_size: 0.2
+  random_state: 42
+  features:
+    - Hours Studied
+    - Sleep Hours
+    - Attendance
+  target: Performance Index
+
+preprocessing:
+  scale_features: true
+
+models:
+  ridge:
+    alpha: 1.0
+
+  random_forest:
+    n_estimators: 200
+    max_depth: 8
+    min_samples_split: 5
+    random_state: 42
+
+  xgboost:
+    n_estimators: 300
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+
+mlflow:
+  experiment_name: student_score_prediction
+  model_name: StudentScoreModel
+  tracking_uri: mlruns
