@@ -9,6 +9,8 @@ import numpy as np
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 
 # ── App ────────────────────────────────────────────────────────────────────────
@@ -98,8 +100,12 @@ async def load_artifacts():
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
-@app.get("/", tags=["Meta"])
+@app.get("/", tags=["Meta"], include_in_schema=False)
 def root():
+    """Serve the web frontend."""
+    frontend = Path("src/frontend/index.html")
+    if frontend.exists():
+        return FileResponse(str(frontend))
     return {
         "service": "Student Score Prediction",
         "docs":    "/docs",

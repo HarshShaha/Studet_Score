@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScoreIQ — Student Performance Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0d0d0b;
+      --paper:    #f5f0e8;
+      --amber:    #c8860a;
+      --amber-lt: #f0b429;
+      --amber-dk: #7a4f04;
+      --muted:    #7a7468;
+      --rule:     rgba(200,134,10,0.18);
+      --card-bg:  #faf6ee;
+      --glow:     rgba(200,134,10,0.12);
+      --mono:     'DM Mono', monospace;
+      --serif:    'Fraunces', serif;
+      --display:  'DM Serif Display', serif;
+      --grade-A:  #1a6b3a;
+      --grade-B:  #1e5fa0;
+      --grade-C:  #7a5c00;
+      --grade-D:  #9b3c00;
+      --grade-F:  #8b1a1a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--serif);
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grain texture overlay ───────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.35;
+    }
+
+    /* ── Header ──────────────────────────────────────── */
+    header {
+      padding: 2rem 3rem 1.5rem;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-family: var(--display);
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .logo span { color: var(--amber); }
+
+    .status-pill {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--rule);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.3s, border-color 0.3s;
+    }
+    .status-pill.online { color: var(--grade-A); border-color: rgba(26,107,58,0.3); }
+    .status-pill .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Main grid ───────────────────────────────────── */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── Hero section ────────────────────────────────── */
+    .hero {
+      grid-column: 1 / -1;
+      padding: 4rem 1rem 3rem;
+      position: relative;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.1s;
+    }
+
+    .hero h1 {
+      font-family: var(--display);
+      font-size: clamp(2.8rem, 5vw, 4.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      max-width: 700px;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.2s;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--amber);
+    }
+
+    .hero-sub {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.35s;
+    }
+
+    /* Decorative rule */
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 1rem; right: 1rem;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--amber), transparent);
+      opacity: 0.3;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Input panel ─────────────────────────────────── */
+    .input-panel {
+      padding: 2.5rem 1rem 2.5rem 1rem;
+      border-right: 1px solid var(--rule);
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.5s;
+    }
+
+    .panel-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-label::before {
+      content: '';
+      display: block;
+      width: 20px; height: 1px;
+      background: var(--amber);
+    }
+
+    .field-group {
+      margin-bottom: 2rem;
+    }
+
+    .field-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .field-value {
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: var(--ink);
+      font-family: var(--mono);
+      transition: color 0.2s;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 2px;
+      background: var(--rule);
+      border-radius: 1px;
+      outline: none;
+      cursor: pointer;
+      margin: 0.75rem 0 0.35rem;
+      position: relative;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--amber);
+      border: 2px solid var(--paper);
+      box-shadow: 0 0 0 1px var(--amber);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    input[type="range"]:hover::-webkit-slider-thumb {
+      transform: scale(1.25);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      background: transparent;
+    }
+
+    .range-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .predict-btn {
+      width: 100%;
+      margin-top: 2.5rem;
+      padding: 1rem 2rem;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s;
+    }
+    .predict-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(200,134,10,0.15) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: transform 0.4s ease;
+    }
+    .predict-btn:hover { background: #1e1e1a; }
+    .predict-btn:hover::before { transform: translateX(100%); }
+    .predict-btn:active { transform: scale(0.99); }
+    .predict-btn.loading { pointer-events: none; opacity: 0.7; }
+
+    .btn-inner { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .spinner {
+      width: 12px; height: 12px;
+      border: 1.5px solid rgba(245,240,232,0.3);
+      border-top-color: var(--paper);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .predict-btn.loading .spinner { display: block; }
+    .predict-btn.loading .btn-text::after { content: 'ing…'; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result panel ────────────────────────────────── */
+    .result-panel {
+      padding: 2.5rem 1rem 2.5rem 2rem;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.65s;
+    }
+
+    .result-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 340px;
+      text-align: center;
+      color: var(--muted);
+      opacity: 0.5;
+      gap: 1rem;
+    }
+    .result-empty .empty-icon {
+      font-size: 2.5rem;
+      opacity: 0.4;
+    }
+    .result-empty p {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1.8;
+    }
+
+    .result-card {
+      display: none;
+    }
+    .result-card.visible {
+      display: block;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    /* Score display */
+    .score-display {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    .score-number {
+      font-family: var(--display);
+      font-size: 5.5rem;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      transition: color 0.4s;
+    }
+    .score-number .score-decimal {
+      font-size: 2.5rem;
+      opacity: 0.5;
+    }
+    .score-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Grade badge */
+    .grade-badge {
+      position: absolute;
+      top: 0; right: 0;
+      font-family: var(--display);
+      font-size: 2.2rem;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid currentColor;
+      transition: all 0.4s;
+    }
+
+    /* Score bar */
+    .score-bar-wrap {
+      margin: 1.5rem 0;
+    }
+    .score-bar-track {
+      height: 4px;
+      background: var(--rule);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.4rem;
+    }
+    .score-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--amber-dk), var(--amber-lt));
+      border-radius: 2px;
+      width: 0%;
+      transition: width 1s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .score-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+    }
+
+    /* Metrics grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    .metric-cell {
+      background: var(--card-bg);
+      padding: 0.9rem 1rem;
+    }
+    .metric-name {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+    .metric-value {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    /* Insight note */
+    .insight-note {
+      font-family: var(--serif);
+      font-size: 0.9rem;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--muted);
+      line-height: 1.6;
+      padding: 1rem;
+      border-left: 2px solid var(--amber);
+      background: var(--glow);
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* ── Batch section ───────────────────────────────── */
+    .batch-section {
+      grid-column: 1 / -1;
+      padding: 2.5rem 1rem;
+      border-top: 1px solid var(--rule);
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.8s;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
+    .section-title {
+      font-family: var(--display);
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+    .section-note {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .batch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .batch-header {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--card-bg);
+      padding: 0.6rem 0.9rem;
+    }
+
+    .batch-input-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--rule);
+    }
+
+    .batch-cell {
+      background: var(--paper);
+    }
+
+    .batch-cell input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--ink);
+      background: transparent;
+      border: none;
+      outline: none;
+      transition: background 0.15s;
+    }
+    .batch-cell input:focus {
+      background: rgba(200,134,10,0.06);
+    }
+    .batch-cell input::placeholder { color: var(--muted); opacity: 0.4; }
+
+    .batch-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .add-row-btn {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.2rem;
+      border: 1px solid var(--rule);
+      background: transparent;
+      color: var(--ink);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .add-row-btn:hover { background: var(--glow); border-color: var(--amber); }
+
+    .batch-predict-btn {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.5rem;
+      background: var(--amber);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .batch-predict-btn:hover { background: var(--amber-dk); }
+
+    /* Batch results */
+    .batch-results {
+      display: none;
+    }
+    .batch-results.visible { display: block; animation: fadeUp 0.4s ease; }
+
+    .batch-results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+    .batch-results-table th {
+      text-align: left;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--rule);
+    }
+    .batch-results-table td {
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid var(--rule);
+      transition: background 0.1s;
+    }
+    .batch-results-table tr:hover td { background: var(--glow); }
+    .batch-results-table tr:last-child td { border-bottom: none; }
+
+    .grade-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Error toast ─────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      padding: 0.8rem 1.4rem;
+      background: #2d1010;
+      color: #f0c4c4;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      border-radius: 4px;
+      border: 1px solid rgba(200,80,80,0.3);
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      max-width: 340px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Footer ──────────────────────────────────────── */
+    footer {
+      grid-column: 1 / -1;
+      border-top: 1px solid var(--rule);
+      padding: 1.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 1s;
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 720px) {
+      header { padding: 1.2rem 1.5rem; }
+      main { grid-template-columns: 1fr; padding: 0 1.2rem; }
+      .hero { padding: 2.5rem 0 2rem; }
+      .input-panel { border-right: none; border-bottom: 1px solid var(--rule); padding: 2rem 0; }
+      .result-panel { padding: 2rem 0; }
+      .batch-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .batch-section { padding: 2rem 0; }
+      .hero h1 { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">Score<span>IQ</span></div>
+    <div class="status-pill" id="statusPill">
+      <span class="dot"></span>
+      <span id="statusText">Connecting…</span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <p class="hero-eyebrow">MLOps · Student Performance Predictor</p>
+      <h1>Predict <em>academic outcomes</em> with precision</h1>
+      <p class="hero-sub">Enter a student's study habits and attendance to get an instant Performance Index prediction, powered by an XGBoost model tracked via MLflow.</p>
+    </section>
+
+    <!-- Input Panel -->
+    <section class="input-panel">
+      <div class="panel-label">Inputs</div>
+
+      <div class="field-group">
+        <div class="field-label">
+          <span>Study Hours / Day</span>
+          <span class="field-value" id="studyVal">7.0 hrs</span>
+        </div>
+        <input type="range" id="studyHours" min="1" max="12" step="0.5" value="7" />
+        <div class="range-ticks"><span>1h</span><span>4h</span><span>8h</span><span>12h</span></div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">
+          <span>Sleep Hours / Night</span>
+          <span class="field-value" id="sleepVal">8.0 hrs</span>
+        </div>
+        <input type="range" id="sleepHours" min="4" max="12" step="0.5" value="8" />
+        <div class="range-ticks"><span>4h</span><span>6h</span><span>9h</span><span>12h</span></div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">
+          <span>Attendance</span>
+          <span class="field-value" id="attendVal">90%</span>
+        </div>
+        <input type="range" id="attendance" min="50" max="100" step="1" value="90" />
+        <div class="range-ticks"><span>50%</span><span>65%</span><span>80%</span><span>100%</span></div>
+      </div>
+
+      <button class="predict-btn" id="predictBtn" onclick="runPredict()">
+        <span class="btn-inner">
+          <span class="spinner"></span>
+          <span class="btn-text">Predict</span>
+        </span>
+      </button>
+    </section>
+
+    <!-- Result Panel -->
+    <section class="result-panel">
+      <div class="panel-label">Prediction</div>
+
+      <div class="result-empty" id="resultEmpty">
+        <div class="empty-icon">◎</div>
+        <p>Adjust sliders &amp;<br/>click Predict to see<br/>the student's score</p>
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <div class="score-display">
+          <div class="score-number" id="scoreNumber">—</div>
+          <div class="score-label">Performance Index (0–100)</div>
+          <div class="grade-badge" id="gradeBadge">—</div>
+        </div>
+
+        <div class="score-bar-wrap">
+          <div class="score-bar-track">
+            <div class="score-bar-fill" id="scoreBar"></div>
+          </div>
+          <div class="score-bar-labels">
+            <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-cell">
+            <div class="metric-name">Grade</div>
+            <div class="metric-value" id="gradeText">—</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-name">Percentile (est.)</div>
+            <div class="metric-value" id="percentileText">—</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-name">Study Hours</div>
+            <div class="metric-value" id="metaStudy">—</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-name">Attendance</div>
+            <div class="metric-value" id="metaAttend">—</div>
+          </div>
+        </div>
+
+        <div class="insight-note" id="insightNote">—</div>
+      </div>
+    </section>
+
+    <!-- Batch Section -->
+    <section class="batch-section">
+      <div class="section-header">
+        <div class="section-title">Batch Prediction</div>
+        <div class="section-note">Up to 10 students at once</div>
+      </div>
+
+      <div class="batch-grid" id="batchGrid">
+        <div class="batch-header">Study Hrs</div>
+        <div class="batch-header">Sleep Hrs</div>
+        <div class="batch-header">Attendance %</div>
+      </div>
+
+      <div id="batchRows"></div>
+
+      <div class="batch-actions" style="margin-top:1rem;">
+        <button class="add-row-btn" onclick="addBatchRow()">+ Add Student</button>
+        <button class="batch-predict-btn" onclick="runBatchPredict()">Predict All</button>
+        <span id="batchCount" style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);"></span>
+      </div>
+
+      <div class="batch-results" id="batchResults">
+        <div style="font-family:var(--mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 0.75rem;">Results</div>
+        <table class="batch-results-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Study Hrs</th>
+              <th>Sleep Hrs</th>
+              <th>Attendance</th>
+              <th>Score</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody id="batchResultsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <span>ScoreIQ · MLOps Student Predictor</span>
+      <span id="footerModel">Model: —</span>
+      <span>FastAPI + MLflow + Prefect</span>
+    </footer>
+
+  </main>
+
+  <!-- Error toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ── Config ─────────────────────────────────────── */
+    const API_BASE = 'http://localhost:8000';
+
+    /* ── Grade colors ───────────────────────────────── */
+    const GRADE_COLORS = {
+      'A+': { color: '#1a6b3a', bg: 'rgba(26,107,58,0.1)' },
+      'A':  { color: '#1a6b3a', bg: 'rgba(26,107,58,0.08)' },
+      'B':  { color: '#1e5fa0', bg: 'rgba(30,95,160,0.1)' },
+      'C':  { color: '#7a5c00', bg: 'rgba(122,92,0,0.1)' },
+      'D':  { color: '#9b3c00', bg: 'rgba(155,60,0,0.1)' },
+      'F':  { color: '#8b1a1a', bg: 'rgba(139,26,26,0.1)' },
+    };
+
+    /* ── Slider wiring ──────────────────────────────── */
+    function wire(id, displayId, fmt) {
+      const el = document.getElementById(id);
+      const out = document.getElementById(displayId);
+      el.addEventListener('input', () => { out.textContent = fmt(el.value); });
+    }
+    wire('studyHours', 'studyVal',  v => `${parseFloat(v).toFixed(1)} hrs`);
+    wire('sleepHours', 'sleepVal',  v => `${parseFloat(v).toFixed(1)} hrs`);
+    wire('attendance', 'attendVal', v => `${v}%`);
+
+    /* ── Track fill (CSS trick via background-size) ── */
+    function updateTrack(input) {
+      const min = +input.min, max = +input.max, val = +input.value;
+      const pct = ((val - min) / (max - min)) * 100;
+      input.style.background =
+        `linear-gradient(90deg, var(--amber) 0%, var(--amber) ${pct}%, var(--rule) ${pct}%, var(--rule) 100%)`;
+    }
+    document.querySelectorAll('input[type=range]').forEach(r => {
+      updateTrack(r);
+      r.addEventListener('input', () => updateTrack(r));
+    });
+
+    /* ── API health check ───────────────────────────── */
+    async function checkHealth() {
+      const pill = document.getElementById('statusPill');
+      const txt  = document.getElementById('statusText');
+      const footer = document.getElementById('footerModel');
+      try {
+        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          pill.classList.add('online');
+          txt.textContent = 'API Online';
+          footer.textContent = 'Model: StudentScoreModel · Live';
+        } else {
+          txt.textContent = 'API Error';
+        }
+      } catch {
+        txt.textContent = 'API Offline (demo mode)';
+        footer.textContent = 'Model: Demo (no API connection)';
+      }
+    }
+    checkHealth();
+
+    /* ── Toast ──────────────────────────────────────── */
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    /* ── Percentile estimate ────────────────────────── */
+    function estimatePercentile(score) {
+      // Rough normal dist centred around 65 with sd~18
+      const z = (score - 65) / 18;
+      const p = 0.5 * (1 + erf(z / Math.SQRT2));
+      return Math.round(Math.min(99, Math.max(1, p * 100)));
+    }
+    function erf(x) {
+      const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+      const sign = x < 0 ? -1 : 1;
+      x = Math.abs(x);
+      const t = 1 / (1 + p * x);
+      const y = 1 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+      return sign * y;
+    }
+
+    /* ── Demo fallback ──────────────────────────────── */
+    function demoPredict(studyH, sleepH, attend) {
+      const score = Math.min(100, Math.max(0,
+        10 * studyH + 0.3 * attend + 2 * Math.max(0, sleepH - 6) - 10 + (Math.random() * 4 - 2)
+      ));
+      const grade = score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 70 ? 'B' :
+                    score >= 60 ? 'C' : score >= 50 ? 'D' : 'F';
+      return { predicted_score: parseFloat(score.toFixed(2)), grade,
+               confidence_note: 'Demo mode — connect the FastAPI server for live predictions.' };
+    }
+
+    /* ── Single predict ─────────────────────────────── */
+    async function runPredict() {
+      const btn = document.getElementById('predictBtn');
+      btn.classList.add('loading');
+
+      const studyH = parseFloat(document.getElementById('studyHours').value);
+      const sleepH = parseFloat(document.getElementById('sleepHours').value);
+      const attend  = parseFloat(document.getElementById('attendance').value);
+
+      let data;
+      try {
+        const res = await fetch(`${API_BASE}/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ study_hours: studyH, sleep_hours: sleepH, attendance: attend }),
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        data = await res.json();
+      } catch (e) {
+        if (e.name === 'TimeoutError' || e.name === 'TypeError') {
+          data = demoPredict(studyH, sleepH, attend);
+        } else {
+          btn.classList.remove('loading');
+          showToast(`Prediction failed: ${e.message}`);
+          return;
+        }
+      }
+
+      btn.classList.remove('loading');
+      renderResult(data, studyH, sleepH, attend);
+    }
+
+    function renderResult(data, studyH, sleepH, attend) {
+      const score = data.predicted_score;
+      const grade = data.grade;
+      const gc = GRADE_COLORS[grade] || GRADE_COLORS['F'];
+      const pct = estimatePercentile(score);
+
+      // Whole + decimal
+      const whole = Math.floor(score);
+      const dec   = ('.' + score.toFixed(2).split('.')[1]);
+
+      document.getElementById('scoreNumber').innerHTML =
+        `${whole}<span class="score-decimal">${dec}</span>`;
+      document.getElementById('scoreBar').style.width = score + '%';
+
+      const badge = document.getElementById('gradeBadge');
+      badge.textContent = grade;
+      badge.style.color = gc.color;
+      badge.style.borderColor = gc.color;
+      badge.style.background = gc.bg;
+
+      document.getElementById('gradeText').textContent = grade;
+      document.getElementById('gradeText').style.color = gc.color;
+      document.getElementById('percentileText').textContent = `~${pct}th`;
+      document.getElementById('metaStudy').textContent = `${studyH}h/day`;
+      document.getElementById('metaAttend').textContent = `${attend}%`;
+      document.getElementById('insightNote').textContent = data.confidence_note;
+
+      document.getElementById('resultEmpty').style.display = 'none';
+      const card = document.getElementById('resultCard');
+      card.classList.add('visible');
+    }
+
+    /* ── Batch predict ──────────────────────────────── */
+    let batchRowCount = 0;
+
+    function addBatchRow() {
+      if (batchRowCount >= 10) { showToast('Max 10 students per batch.'); return; }
+      batchRowCount++;
+      const container = document.getElementById('batchRows');
+      const row = document.createElement('div');
+      row.className = 'batch-input-row';
+      row.dataset.idx = batchRowCount;
+      row.innerHTML = `
+        <div class="batch-cell"><input type="number" min="1" max="12" step="0.5" placeholder="e.g. 7" /></div>
+        <div class="batch-cell"><input type="number" min="4" max="12" step="0.5" placeholder="e.g. 8" /></div>
+        <div class="batch-cell"><input type="number" min="50" max="100" step="1" placeholder="e.g. 90" /></div>
+      `;
+      container.appendChild(row);
+      document.getElementById('batchCount').textContent = `${batchRowCount} student${batchRowCount !== 1 ? 's' : ''}`;
+    }
+
+    // Seed 3 rows on load
+    addBatchRow(); addBatchRow(); addBatchRow();
+
+    async function runBatchPredict() {
+      const rows = document.querySelectorAll('#batchRows .batch-input-row');
+      const payloads = [];
+
+      for (const row of rows) {
+        const inputs = row.querySelectorAll('input');
+        const studyH  = parseFloat(inputs[0].value);
+        const sleepH  = parseFloat(inputs[1].value);
+        const attend   = parseFloat(inputs[2].value);
+        if (isNaN(studyH) || isNaN(sleepH) || isNaN(attend)) continue;
+        payloads.push({ study_hours: studyH, sleep_hours: sleepH, attendance: attend });
+      }
+
+      if (payloads.length === 0) { showToast('Fill in at least one complete row.'); return; }
+
+      let results;
+      try {
+        const res = await fetch(`${API_BASE}/predict/batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloads),
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        results = await res.json();
+      } catch {
+        // Demo fallback
+        results = payloads.map((p, i) => {
+          const demo = demoPredict(p.study_hours, p.sleep_hours, p.attendance);
+          return { index: i, predicted_score: demo.predicted_score, grade: demo.grade };
+        });
+      }
+
+      // Merge back original inputs
+      const tbody = document.getElementById('batchResultsBody');
+      tbody.innerHTML = '';
+      results.forEach((r, i) => {
+        const p = payloads[i];
+        const gc = GRADE_COLORS[r.grade] || GRADE_COLORS['F'];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--muted)">${i + 1}</td>
+          <td>${p.study_hours}h</td>
+          <td>${p.sleep_hours}h</td>
+          <td>${p.attendance}%</td>
+          <td><strong style="font-size:1rem">${r.predicted_score.toFixed(1)}</strong></td>
+          <td><span class="grade-chip" style="color:${gc.color};background:${gc.bg};border:1px solid ${gc.color}30">${r.grade}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const batchResultsEl = document.getElementById('batchResults');
+      batchResultsEl.classList.add('visible');
+      batchResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    /* ── Enter key on predict ───────────────────────── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && document.activeElement.tagName !== 'INPUT') runPredict();
+    });
+  </script>
+
+</body>
+</html>
