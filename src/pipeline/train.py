@@ -153,7 +153,7 @@ def train(
     models_dir.mkdir(exist_ok=True)
     best_model = models[best_name]
     joblib.dump(best_model, models_dir / "best_model.joblib")
-    logger.info(f"Best model saved to models/best_model.joblib")
+    logger.info("Best model saved to models/best_model.joblib")
 
     return results
 
