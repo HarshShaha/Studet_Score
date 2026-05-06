@@ -4,7 +4,7 @@ Downloads the Students Performance dataset from Kaggle.
 Falls back to synthetic generation if Kaggle credentials are absent.
 """
 
-import os
+# import os
 import logging
 import yaml
 import pandas as pd

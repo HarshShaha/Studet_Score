@@ -66,7 +66,7 @@ def train_and_log(
     features: list[str],
 ) -> tuple[float, str]:
     """Fit model, log to MLflow, return (r2_score, run_id)."""
-    mlp = params["mlflow"]
+    # mlp = params["mlflow"]
 
     with mlflow.start_run(run_name=model_name) as run:
         model.fit(X_train, y_train)

@@ -128,7 +128,7 @@ def predict(payload: PredictRequest):
     if MODEL is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
-    features = PARAMS["data"]["features"]   # ['Hours Studied', 'Sleep Hours', 'Attendance']
+    # features = PARAMS["data"]["features"]   # ['Hours Studied', 'Sleep Hours', 'Attendance']
     X_raw = np.array([[payload.study_hours, payload.sleep_hours, payload.attendance]])
 
     X = SCALER.transform(X_raw) if SCALER is not None else X_raw

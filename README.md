@@ -73,7 +73,7 @@ mlflow ui --port 5000
 uvicorn src.api.main:app --reload --port 8000
 
 # 6. Predict (example)
- Invoke-RestMethod -Uri "http://localhost:8000/predict" `
+Invoke-RestMethod -Uri "http://localhost:8000/predict" `
 -Method POST `
 -Headers @{ "Content-Type" = "application/json" } `
 -Body '{"study_hours": 3, "sleep_hours": 6, "attendance": 50}'

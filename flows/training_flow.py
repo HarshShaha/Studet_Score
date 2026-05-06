@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import yaml
-import logging
+# import logging
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_table_artifact, create_markdown_artifact
 
@@ -137,7 +137,7 @@ def scheduled_training_flow():
             --name daily-retrain \
             --cron "0 2 * * *"
     """
-    return training_flow()
+    return training_flow()  
 
 
 if __name__ == "__main__":
